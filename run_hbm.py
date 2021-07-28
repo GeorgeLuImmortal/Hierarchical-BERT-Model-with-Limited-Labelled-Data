@@ -59,6 +59,27 @@ from optparse import OptionParser
 import pickle
 
 
+args = {
+
+    ## directory for encoded embeddings
+    'data_dir': 'datasets/roberta-base_data/',
+
+    ## output of the experiments
+    'output_dir': 'outputs/',
+
+    ## detailed output of each step
+    'verbose_output_dir': 'outputs/hbm_results/',
+
+    ## output of attention scores for sentences
+    'attention_output_dir': 'attentions/',
+    'cuda_num': 1,
+}
+
+
+ ## take a list of strings as optional arguments
+def list_callback(option, opt, value, parser):
+    setattr(parser.values, option.dest, value.split(','))
+
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -67,8 +88,6 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
-
-
 
 
 class Normalize(object):
@@ -99,10 +118,10 @@ def import_data(dataset, max_len):
 
 
 
-    with open('./datasets/roberta-base_data/%s_neg.p'%(dataset), 'rb') as fp:
+    with open(os.path.join(args['data_dir'],'%s_neg.p'%(dataset)), 'rb') as fp:
         pre_trained_neg_dict = pickle.load(fp)
         
-    with open('./datasets/roberta-base_data/%s_pos.p'%(dataset), 'rb') as fp:
+    with open(os.path.join(args['data_dir'],'%s_pos.p'%(dataset)), 'rb') as fp:
         pre_trained_pos_dict = pickle.load(fp)
 
 
@@ -228,7 +247,7 @@ class BertConfig():
     def __init__(self,
                  hidden_size=768,
                  num_hidden_layers=4,
-                 num_attention_heads=2,
+                 num_attention_heads=1,
                  intermediate_size=3072,
                  hidden_act="relu",
                  hidden_dropout_prob=0.01,
@@ -638,52 +657,63 @@ if __name__ == "__main__":
 
     # max_len = max(len(max(pre_trained_pos,key = lambda x: len(x))),len(max(pre_trained_neg,key = lambda x: len(x))))
 
-    parser = OptionParser(usage='usage: %prog [training set size in list] dataset_name learning_rate no_epochs max_len')
+    parser = OptionParser(usage='usage: -r random_seeds -d dataset_name -l learning_rate -e no_epochs -m max_len -s train_size')
 
     
-    parser.add_option("-d","--dataset_name", action="store", type="string", dest="dataset_name", help="directory of data encoded by token-level Roberta", default = 'Longer_MovieReview')
+    parser.add_option("-d","--dataset_name", action="store", type="string", dest="dataset_name", help="directory of data encoded by token-level Roberta", default = 'longer_moviereview')
     parser.add_option("-l","--learning_rate", action="store", type="float", dest="learning_rate", help="learning rate for fine tuning", default=2e-5)
     parser.add_option("-e","--no_epochs", action="store", type="int", dest="no_epochs", help="the number of epochs for fine tuning",default=50)
-    parser.add_option("-m","--max_len", action="store", type="int", dest="max_len", help="the maximum sentences number per document",default=128)
+    parser.add_option("-m","--max_len", action="store", type="int", dest="max_len", help="the maximum sentences number per document",default=16)
+    parser.add_option('-r', '--random_seeds', type='string', action='callback',dest='random_seeds',callback=list_callback,default=['1988','1989'])
+    parser.add_option('-s', '--training_size', type='string', action='callback',dest='training_size',callback=list_callback,default=['50','100'])
 
-    (options, args) = parser.parse_args()
+    (options, _) = parser.parse_args()
 
-    if len(args)<1:
-        parser.error( "Must specify at least one number as training size and the largest training size is 200, you can customize the maximum training size by modifying the corrsponding codes of initializing training set." )
-
-    try:
-        for number in args:
-             int(number)
-    except: 
-         parser.error( "Must specify at least one number as training size and the largest training size is 200, you can customize the maximum training size by modifying the corrsponding codes of initializing training set." )
+        
+    for number in options.training_size:
+        if int(number)>200:
+            parser.error( "The largest training size is 200, you can customize the maximum training size by modifying the corrsponding codes of initializing training set." )
 
     dataset = options.dataset_name
     max_len = options.max_len
     lr = options.learning_rate
     no_epochs = options.no_epochs
 
+    # one can customize the maximum number instances in the training set by modifyting the corresponding codes of initializing training set
+    train_sizes = [int(number) for number in options.training_size]
+    random_states = [int(number) for number in options.random_seeds]
+
+    print('number of epochs: ', no_epochs)
+    print('dataset name: ', dataset)
+    print('initial random states: ', random_states)
+    print('training set sizes: ', train_sizes)
 
     gradient_clipping = 1.0
     train_batch=256
     val_batch=512
 
-    # one can customize the maximum number instances in the training set by modifyting the corresponding codes of initializing training set
-    train_sizes = [int(number) for number in args]
     
+  
 
-    cuda_num = 0
-
-    # random states for subsampling training set
-    seeds = [i for i in range(1988,1989)]
+  
 
     TEXT_emb, LABEL_emb = import_data(dataset, max_len)
     config = BertConfig(seq_length=max_len)
 
     for train_size in train_sizes:
-        for seed in seeds:
+        df_all = pd.DataFrame()
+        df_all_auc = pd.DataFrame()
+
+        best_aucs = []
+        best_raws = []
+
+        for seed in random_states:
             
             confusion_matrices = []
             aucs = []
+
+            train_confusion_matrices = []
+            train_aucs = []
             
 
         
@@ -717,7 +747,7 @@ if __name__ == "__main__":
            
             model = HTransformer(config=config)
             model.apply(init_weights)
-            model.cuda(cuda_num)
+            model.cuda(args['cuda_num'])
             # model.to('cuda')
             opt = torch.optim.Adam(lr=lr, params=model.parameters())
             losses = []
@@ -725,7 +755,9 @@ if __name__ == "__main__":
             
             
             best_auc = 0.0
-            best_acc = 0.0
+            # best_acc = 0.0
+
+
             for e in tqdm(range(no_epochs)):
                 
                 
@@ -747,7 +779,7 @@ if __name__ == "__main__":
 
                     if torch.cuda.is_available():
                         # inputs, labels = Variable(inputs.to('cuda')), labels.to('cuda')
-                        inputs, labels = Variable(inputs.cuda(cuda_num)), labels.cuda(cuda_num)
+                        inputs, labels = Variable(inputs.cuda(args['cuda_num'])), labels.cuda(args['cuda_num'])
 
 
                     out = model(inputs)
@@ -755,7 +787,7 @@ if __name__ == "__main__":
 
                     weight = [1.0,1.0]
                     print('balanced weight: ',weight)
-                    weight = torch.tensor(weight).cuda(cuda_num)
+                    weight = torch.tensor(weight).cuda(args['cuda_num'])
                     # weight = torch.tensor(weight).to('cuda')
                     loss = nn.CrossEntropyLoss(weight,reduction='mean')
 
@@ -787,12 +819,17 @@ if __name__ == "__main__":
                         y_eval_pred = []
                         y_eval_true = []
                         y_eval_prob = []
+
+                        y_train_pred = []
+                        y_train_true = []
+                        y_train_prob = []
+
+                        train_attention_scores = torch.Tensor()
                         attention_scores = torch.Tensor()
 
-                        for idx, data in enumerate(tqdm(testloader)):
+                        for idx,data in enumerate(tqdm(trainloader)):
 
                             inputs, labels = data
-
 
                             if inputs.size(1) > config.seq_length:
                                 inputs = inputs[:, :config.seq_length, :]
@@ -800,7 +837,45 @@ if __name__ == "__main__":
 
                             if torch.cuda.is_available():
                                 # inputs, labels = Variable(inputs.to('cuda')), labels.to('cuda')
-                                inputs, labels = Variable(inputs.cuda(cuda_num)), labels.cuda(cuda_num)
+                                inputs, labels = Variable(inputs.cuda(args['cuda_num'])), labels.cuda(args['cuda_num'])
+
+                            out = model(inputs)
+                            
+                            sm = nn.Softmax(dim=1)
+                            pred_prob = out[0].cpu()
+                            pred_prob = sm(pred_prob)
+                            
+                            if config.output_attentions:
+                                last_layer_attention = out[1][-1].cpu()
+                                train_attention_scores = torch.cat((train_attention_scores, last_layer_attention))
+        #                         attention_scores=attention_scores+[last_layer_attention]
+                                
+
+                            predict = torch.argmax(pred_prob, axis=1)
+                            labels = labels.cpu()
+                            y_train_pred = y_train_pred+predict.tolist()
+                            y_train_true = y_train_true+labels.tolist()
+                            y_train_prob = y_train_prob+pred_prob.tolist()
+                            
+                            y_train_prob_pos = np.array(y_train_prob)[:,1]
+
+                            del inputs, labels, out
+
+
+                        for idx, data in enumerate(tqdm(testloader)):
+
+                            inputs, labels = data
+
+
+                            
+
+                            if inputs.size(1) > config.seq_length:
+                                inputs = inputs[:, :config.seq_length, :]
+
+
+                            if torch.cuda.is_available():
+                                # inputs, labels = Variable(inputs.to('cuda')), labels.to('cuda')
+                                inputs, labels = Variable(inputs.cuda(args['cuda_num'])), labels.cuda(args['cuda_num'])
 
 
 
@@ -828,6 +903,19 @@ if __name__ == "__main__":
                         
                         
 
+                        train_acc = accuracy_score(y_train_true, y_train_pred)
+                        train_f_score = f1_score(y_train_true,y_train_pred,average='macro')
+                        train_tn, train_fp, train_fn, train_tp = confusion_matrix(y_train_true, y_train_pred, labels=[0,1]).ravel()
+                        
+                        train_fpr, train_tpr, train_thresholds = metrics.roc_curve(y_train_true, y_train_prob_pos, pos_label=1)
+                        train_step_auc = metrics.auc(train_fpr, train_tpr)
+                        train_aucs.append(train_step_auc)
+                        
+                        train_confusion_matrices.append({'TP':train_tp, 'TN':train_tn, 'FP': train_fp, 'FN':train_fn})
+
+                        print('Epoch: ',e,' step:',i,' training accuracy: ', train_acc)
+                        print('Epoch: ',e,' step:',i,' training AUC:', train_step_auc)
+                        print('Epoch: ',e,' step:',i,' training confusion matrix:', 'TP',train_tp, 'TN',train_tn, 'FP',train_fp, 'FN',train_fn)
                       
                         
                         acc = accuracy_score(y_eval_true, y_eval_pred)
@@ -846,30 +934,37 @@ if __name__ == "__main__":
                         macro_f.append(f_score)
 
 
-                        print('best accuracy so far', best_acc)
-                        print('accuracy this step', acc)
+                        # print('best accuracy so far', best_acc)
+                        # print('accuracy this step', acc)
 
-                        print('best auc so far', best_auc)
-                        print('auc this step', step_auc)
+                        # print('best auc so far', best_auc)
+                        # print('auc this step', step_auc)
+                        if config.output_attentions:
 
-                        # if best_auc<=step_auc:
-                        #     best_auc = step_auc
-                        #     files = glob.glob('./Feasibility/%s/attention/%s/*_%s.pt'%(dataset,seed,train_size))
-                        #     for f in files:
-                        #         os.remove(f)
-                        #     doc_attention_score = []
-                        #     for batch in attention_scores:
-                        #         for doc in batch:
-                        #             doc_attention_score.append(doc[0])
+                            attention_output_dirs = os.path.join(args['attention_output_dir'],'%s/'%(dataset))
+
+                            if not os.path.exists(attention_output_dirs):
+                                os.makedirs(attention_output_dirs)
+
+                            ## if current best auc is smaller than the current step auc, we will update the attention scores
+                            if best_auc<train_step_auc:
+                                best_auc = train_step_auc
+                                files = glob.glob(attention_output_dirs+'*_seed%s_size%s.pt'%(seed,train_size))
+                                for f in files:
+                                    os.remove(f)
+                                doc_attention_score = []
+                                for batch in attention_scores:
+                                    for doc in batch:
+                                        doc_attention_score.append(doc[0])
+                                        
+                                final_attention_scores = np.zeros((len(TEXT_emb),config.seq_length))
+                                for idx,attention_matrix in enumerate(doc_attention_score):
+                                    attention_matrix = np.array(attention_matrix.cpu())
+                                    sum_attention_score = attention_matrix.sum(axis=0)
+                                    final_attention_scores[idx,:] = sum_attention_score
                                     
-                            # final_attention_scores = np.zeros((len(TEXT_emb),config.seq_length))
-                            # for idx,attention_matrix in enumerate(doc_attention_score):
-                            #     attention_matrix = np.array(attention_matrix.cpu())
-                            #     sum_attention_score = attention_matrix.sum(axis=0)
-                            #     final_attention_scores[idx,:] = sum_attention_score
-                                
-                            # print(final_attention_scores.shape)
-                            # torch.save(attention_scores,'./Feasibility/%s/attention/%s/%s_%s_%s.pt'%(dataset,seed,seed,e,train_size))
+                                print(final_attention_scores.shape)
+                                torch.save(attention_scores,attention_output_dirs+'epoch%s_seed%s_size%s.pt'%(e,seed,train_size))
 
         #             fig, ax = plt.subplots(figsize=(12.5,10))
         #             plt.plot(losses,label='loss')
@@ -877,20 +972,52 @@ if __name__ == "__main__":
         #             ax.legend()
                     
         #             plt.savefig('./Feasibility/%s_%s_%s_100'%(seed,e,i))
-                    df = pd.DataFrame()
-                    df[seed] = [row for row in confusion_matrices]
-                    df.to_csv('./outputs/raw_%s_h%s_s%s_e%s_size%s.csv'%(dataset,config.num_attention_heads,seed,no_epochs,train_size),index=False)
+            df = pd.DataFrame()
+            df[seed] = [row for row in confusion_matrices]
+            df.to_csv(os.path.join(args['verbose_output_dir'],'all_raw_%s_h%s_s%s_size%s.csv'%(dataset,config.num_attention_heads,seed,train_size)),index=False)
 
-                    
-                    df_auc = pd.DataFrame()
-                    df_auc[seed] = [row for row in aucs]
-                    df_auc.to_csv('./outputs/auc_%s_h%s_s%s_e%s_size%s.csv'%(dataset,config.num_attention_heads,seed,no_epochs,train_size),index=False)
-                    
-                    
-                    df_loss = pd.DataFrame()
-                    df_loss[seed] = [row for row in losses]
-                    df_loss.to_csv('./outputs/loss_%s_h%s_s%s_e%s_size%s.csv'%(dataset,config.num_attention_heads,seed,no_epochs,train_size),index=False)
+            
+            df_auc = pd.DataFrame()
+            df_auc[seed] = [row for row in aucs]
+            df_auc.to_csv(os.path.join(args['verbose_output_dir'],'all_auc_%s_h%s_s%s_size%s.csv'%(dataset,config.num_attention_heads,seed,train_size)),index=False)
+            
+            
+            df_loss = pd.DataFrame()
+            df_loss[seed] = [row for row in losses]
+            df_loss.to_csv(os.path.join(args['verbose_output_dir'],'all_loss_%s_h%s_s%s_size%s.csv'%(dataset,config.num_attention_heads,seed,train_size)),index=False)
+
+            df = pd.DataFrame()
+            df[seed] = [row for row in train_confusion_matrices]
+            df.to_csv(os.path.join(args['verbose_output_dir'],'all_train_raw_%s_h%s_s%s_size%s.csv'%(dataset,config.num_attention_heads,seed,train_size)),index=False)
+
+            
+            df_auc = pd.DataFrame()
+            df_auc[seed] = [row for row in train_aucs]
+            df_auc.to_csv(os.path.join(args['verbose_output_dir'],'all_train_auc_%s_h%s_s%s_size%s.csv'%(dataset,config.num_attention_heads,seed,train_size)),index=False)
+
+
+            ## if multiple training aucs have the same values, we output the results of the latest steps
+            max_ids = np.argwhere(train_aucs == np.amax(train_aucs))
+            max_id = max_ids[-1][0]
+
+            best_aucs.append(aucs[max_id])
+            best_raws.append(confusion_matrices[max_id])
+
             del model
+
+        
+        df_all['result'] = [row for row in best_raws]
+        df_all['seed'] = random_states
+        df_all = df_all.set_index('seed')
+        df_all.to_csv(os.path.join(args['output_dir'],'raw_%s_hbm_%s.csv'%(dataset,train_size)),index=True)
+
+        df_all_auc['result'] = [row for row in best_aucs]
+        df_all_auc['seed'] = random_states
+        df_all_auc = df_all_auc.set_index('seed')
+        df_all_auc.to_csv(os.path.join(args['output_dir'],'auc_%s_hbm_%s.csv'%(dataset,train_size)),index=True)
+
+
+            
 
 
 
