@@ -29,8 +29,9 @@ The options of -t are `hbm` (corresponding to the sentence representation genera
 
 ### Step 2. Run Hierarchical BERT Model (HBM)
 
-We can evaluate the Hierarchical BERT Model (HBM) with limited number of labelled data (in this experiment, we subsample the fully labelled dataset to simulate this low-shot scenarios) by:
+We can evaluate the Hierarchical BERT Model (HBM) with limited number of labelled data (in this experiment, we subsample the fully labelled dataset to simulate this low-shot scenario) by:
 
     python run_hbm.py -d dataset_name -l learning_rate -e num_of_epochs -r random_seeds -s training_set_size
 
 The `training_set_size` can be randome numbers up to 200 (also, you can customise the maximum number by editing the script), for example  `-s 50,100,150` means the training HBM with 50, 100 and 150 labelled instances respectively.  The `random_seeds` are random state for subsampling training set from the whole dataset. For example `-r 1988,1999 -s 50,100` will training HBM with four different training sets, i.e. 50 labelled instances sampled by seed 1988, 50 labelled instances sampled by seed 1999, 100 labelled instances sampled by seed 1988 and 100 labelled instances sampled by seed 1999.
+The script then evaluate the performance of HBM in the rest testing set (i.e. the whole dataset minus the 200 instances that sampled out as the training set, the details can be referred in the paper). The evaluation results are stored in directory "outputs/".
