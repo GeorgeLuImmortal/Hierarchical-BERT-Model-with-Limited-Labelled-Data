@@ -23,3 +23,4 @@ Tested Python 3.6, and requiring the following packages, which are available via
 
 The first step is encoding raw text data into different high-dimensional vectorised representations. The raw text data should be stored in directory "raw_corpora/", each dataset should have its individual directory, for example, the "longer_moviereview/" directory under folder "raw_corpora/". The input corpus of documents should consist of plain text files stored in csv format (two files for one corpus, one for documents belong to class A and one for documents for class B). It should be noted that the csv file must be named in the format #datasetname_neg_text.csv or #datasetname_pos_text.csv. Each row corresponding to one document in that corpus, the format can be refered to the csv file in the sample directory "raw_corpora/longer_moviereview/". Then we can start converting the text into vectors:
 
+    python encode_text.py
