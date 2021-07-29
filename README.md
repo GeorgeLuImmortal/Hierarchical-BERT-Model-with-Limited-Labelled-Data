@@ -31,4 +31,6 @@ The options of -t are __hbm (corresponding to the outputs of token-level Roberta
 
 We can evaluate the Hierarchical BERT Model (HBM) with limited number of labelled data (in this experiment, we subsample the fully labelled dataset to simulate this low-shot scenarios) by:
 
-    python run_hbm.py -d dataset_name -l learning_rate -e num_of_epochs -r random_seeds(for subsampling the training set) -s training_set_size
+    python run_hbm.py -d dataset_name -l learning_rate -e num_of_epochs -r random_seeds -s training_set_size
+
+The training_set_size can be randome numbers up to 200 (also, you can customise the maximum number by editing the script), for example  `-s 50,100,150` means the training HBM with 50, 100 and 150 labelled instances respectively.  
