@@ -25,4 +25,4 @@ The first step is encoding raw text data into different high-dimensional vectori
 
     python encode_text.py -d dataset_name -t encoding_methods
     
-The options of -t is ``hbm'', ``roberta-base'' and ``fasttext''.
+The options of -t are hbm, roberta-base and fasttext that represent three different representation for experiments respectively.
