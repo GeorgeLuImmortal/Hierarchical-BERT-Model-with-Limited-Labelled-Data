@@ -13,11 +13,13 @@ Tested Python 3.6, and requiring the following packages, which are available via
 * Required: [matplotlib >= 3.3.3](https://matplotlib.org/)
 * Required: [torch >= 1.9.0](https://pytorch.org/)
 * Required: [transformers >= 4.8.2](https://huggingface.co/transformers/)
+* Required: [Keras >= 2.0.8](https://keras.io/)
+* Required: [Tensorflow >= 1.14.0](https://www.tensorflow.org/)
 * Required: [FastText model trained with Wikipedia 300-dimension](https://fasttext.cc/docs/en/pretrained-vectors.html)
 * Required: packaging >= 20.0
 
 
 ### Data Processing
 
-The first step is encoding raw text data into different high-dimensional vectorised representations. This experiments support
+The first step is encoding raw text data into different high-dimensional vectorised representations. The raw text data should be stored in directory "raw_corpora/", each dataset should have its individual directory, for example, the "ProtonPumpInhibitors" under folder "corpus_data". The input corpus of documents should consist of plain text files stored in csv format (two files for one corpus, one for documents belong to class A and one for documents for class B), each row corresponding to one document in that corpus, the format can be refered to the csv file in the sample directory "corpus_data/ProtonPumpInhibitors/". Then we can start convert the text into vectors:
 
