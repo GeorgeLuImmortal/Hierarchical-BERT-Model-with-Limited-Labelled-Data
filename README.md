@@ -71,3 +71,5 @@ When we run the script in __Step 2__, besides the AUC scores on testing set, we 
 We play with the code using the [MovieReview Sentiment dataset](https://www.cs.cornell.edu/people/pabo/movie-review-data/) consisting of 1000 negative movie reviews and 1000 positive movie reviews. The distribution of the number of sentences per document is shown below (maximum length 118 and avg length 33.97):
 ![image](https://user-images.githubusercontent.com/16153974/127650224-c0d33b13-3027-4125-834c-86c1ca549f70.png)
 
+We evaluate the performance of various methods by the setting of training size [50, 100], randome states [1988, 1989]. The performance of each method is shown below (AUC score):
+
