@@ -16,6 +16,7 @@ Tested Python 3.6, and requiring the following packages, which are available via
 * Required: [Keras >= 2.0.8](https://keras.io/)
 * Required: [Tensorflow >= 1.14.0](https://www.tensorflow.org/)
 * Required: [FastText model trained with Wikipedia 300-dimension](https://fasttext.cc/docs/en/pretrained-vectors.html)
+* Required: [GloVe model trained with Gigaword and Wikipedia 200-dimension](https://nlp.stanford.edu/projects/glove/)
 * Required: packaging >= 20.0
 
 
