@@ -74,3 +74,7 @@ We play with the code using the [MovieReview Sentiment dataset](https://www.cs.c
 We evaluate the performance of various methods by the setting of training size [50, 100], randome states [1988, 1989]. The performance of each method is shown below (AUC score):
 ![image](https://user-images.githubusercontent.com/16153974/127651353-62ce7fc2-837f-4dd4-be5b-37904842dcab.png)
 
+You can also play with the notebook to check the informative sentences suggested by the HBM as shown below (examples taken from the testing set):
+### A postive movie review
+![image](https://user-images.githubusercontent.com/16153974/127651682-06a330b2-09c8-424b-9da3-626c37205108.png)
+
