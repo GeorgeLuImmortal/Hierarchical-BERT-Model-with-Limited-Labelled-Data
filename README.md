@@ -2,6 +2,7 @@
 
 This repository is temporarily associated with paper [Lu, J., Henchion, M., Bacher, I. and Mac Namee, B., 2021. A Sentence-level Hierarchical BERT Model for Document Classification with Limited Labelled Data. arXiv preprint arXiv:2106.06738.](https://arxiv.org/pdf/2106.06738.pdf)
 
+## Usage
 
 ### Dependencies
 Tested Python 3.6, and requiring the following packages, which are available via PIP:
@@ -63,4 +64,6 @@ It should be noted that `-t text_representation` indicates the encoding method y
 
 ### Step 6. Visualise informative sentences inferred by HBM in a document 
 
-When we run the script in __Step 2__, besides the AUC scores on testing set, we can also get the attention scores of each sentences that measure whether sentences contribute a lot in forming the document representation. Hence, these attention scores can serve as clue of whether the sentences are important or not. The attention scores are stored in "attentions/#dataset_name/". You can visualise this attention scores by playing with __Visualization_of_informative_sentences.ipynb__.
+When we run the script in __Step 2__, besides the AUC scores on testing set, we can also get the attention scores of each sentences that measure whether sentences contribute a lot in forming the document representation. Hence, these attention scores can serve as clue of whether the sentences are important or not. The attention scores are stored in "attentions/#dataset_name/". You can visualise this attention scores by playing with the notebook __Visualization_of_informative_sentences.ipynb__.
+
+## Toy Experiments
