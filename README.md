@@ -72,4 +72,5 @@ We play with the code using the [MovieReview Sentiment dataset](https://www.cs.c
 ![image](https://user-images.githubusercontent.com/16153974/127650224-c0d33b13-3027-4125-834c-86c1ca549f70.png)
 
 We evaluate the performance of various methods by the setting of training size [50, 100], randome states [1988, 1989]. The performance of each method is shown below (AUC score):
+![image](https://user-images.githubusercontent.com/16153974/127651353-62ce7fc2-837f-4dd4-be5b-37904842dcab.png)
 
