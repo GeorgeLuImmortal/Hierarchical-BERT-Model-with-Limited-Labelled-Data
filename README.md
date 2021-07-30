@@ -67,3 +67,5 @@ It should be noted that `-t text_representation` indicates the encoding method y
 When we run the script in __Step 2__, besides the AUC scores on testing set, we can also get the attention scores of each sentences that measure whether sentences contribute a lot in forming the document representation. Hence, these attention scores can serve as clue of whether the sentences are important or not. The attention scores are stored in "attentions/#dataset_name/". You can visualise this attention scores by playing with the notebook __Visualization_of_informative_sentences.ipynb__.
 
 ## Toy Experiments
+
+We play with the code using the [MovieReview Sentiment dataset] (https://www.cs.cornell.edu/people/pabo/movie-review-data/) consisting of 1000 negative movie reviews and 1000 positive movie reviews.
