@@ -35,7 +35,7 @@ We can evaluate the Hierarchical BERT Model (HBM) with limited number of labelle
     python run_hbm.py -d dataset_name -l learning_rate -e num_of_epochs -r random_seeds -s training_set_size
 
 The `training_set_size` can be random numbers up to 200 (also, you can customise the maximum number by editing the script), for example  `-s 50,100,150` means the training HBM with 50, 100 and 150 labelled instances respectively.  The `random_seeds` are random state for subsampling training set from the whole dataset. For example `-r 1988,1999 -s 50,100` will training HBM with four different training sets, i.e. 50 labelled instances sampled by seed 1988, 50 labelled instances sampled by seed 1999, 100 labelled instances sampled by seed 1988 and 100 labelled instances sampled by seed 1999.
-The script then evaluate the performance of HBM in the rest testing set (i.e. the whole dataset minus the 200 instances that sampled out as the training set, the details can be referred in the paper). The evaluation results are stored in directory "outputs/". Furthermore, the concrete results of each step are stored in "outputs/hbm_results/".
+The script then evaluate the performance of HBM in the rest testing set (i.e. the whole dataset minus the 200 instances that sampled out as the training set, the details can be referred in the paper). The evaluation results are stored in directory "outputs/". Furthermore, the concrete results of each step are stored in "outputs/hbm_results/". The results files starting with "auc_" store the AUC score results while files starting with "raw_" store the confusion matrix (tp, tn, fp, fn).
 
 ### Step 3. Run fine-tuned RoBERTa (baseline)
 
@@ -60,3 +60,7 @@ We can also evaluate the performance of RoBERTa+SVM and FastText+SVM withi limit
     python run_svm-based.py -d dataset_name -t text_representation -r random_seeds -s training_set_size
    
 It should be noted that `-t text_representation` indicates the encoding method you choose, the valid options are `fasttext` and `roberta-base`. The evaluation results are stored in directory "outputs/".
+
+### Step 6. Visualise informative sentences inferred by HBM in a document 
+
+When we run the script in __Step 2__, besides the AUC scores on testing set, we can also get the attention scores of each sentences that measure whether sentences contribute a lot in forming the document representation. Hence, these attention scores can serve as clue of whether the sentences are important or not. The attention scores are stored in "attentions/#dataset_name/". You can visualise this attention scores by playing with __Visualization_of_informative_sentences.ipynb__.
