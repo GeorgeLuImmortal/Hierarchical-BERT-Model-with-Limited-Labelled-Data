@@ -34,7 +34,7 @@ We can evaluate the Hierarchical BERT Model (HBM) with limited number of labelle
 
     python run_hbm.py -d dataset_name -l learning_rate -e num_of_epochs -r random_seeds -s training_set_size
 
-The `training_set_size` can be randome numbers up to 200 (also, you can customise the maximum number by editing the script), for example  `-s 50,100,150` means the training HBM with 50, 100 and 150 labelled instances respectively.  The `random_seeds` are random state for subsampling training set from the whole dataset. For example `-r 1988,1999 -s 50,100` will training HBM with four different training sets, i.e. 50 labelled instances sampled by seed 1988, 50 labelled instances sampled by seed 1999, 100 labelled instances sampled by seed 1988 and 100 labelled instances sampled by seed 1999.
+The `training_set_size` can be random numbers up to 200 (also, you can customise the maximum number by editing the script), for example  `-s 50,100,150` means the training HBM with 50, 100 and 150 labelled instances respectively.  The `random_seeds` are random state for subsampling training set from the whole dataset. For example `-r 1988,1999 -s 50,100` will training HBM with four different training sets, i.e. 50 labelled instances sampled by seed 1988, 50 labelled instances sampled by seed 1999, 100 labelled instances sampled by seed 1988 and 100 labelled instances sampled by seed 1999.
 The script then evaluate the performance of HBM in the rest testing set (i.e. the whole dataset minus the 200 instances that sampled out as the training set, the details can be referred in the paper). The evaluation results are stored in directory "outputs/". Furthermore, the concrete results of each step are stored in "outputs/hbm_results/".
 
 ### Step 3. Run fine-tuned RoBERTa (baseline)
@@ -53,5 +53,10 @@ Similar to the above settings, we can evaluate the Hierarchical Attention Networ
     
 The preprocessing and text encoding (with GloVe) are also integrated into this script and you should download the GloVe model in advance (see __dependencies__). The evaluation results are stored in dictory "outputs/".
 
-## Step 5. Run SVM-based methods (i.e. pretrained RoBERTa + SVM and FastText + SVM) (baseline)
+### Step 5. Run SVM-based methods (i.e. pretrained RoBERTa + SVM and FastText + SVM) (baseline)
 
+We can also evaluate the performance of RoBERTa+SVM and FastText+SVM withi limited number of labelled data by:
+
+    python run_svm-based.py -d dataset_name -t text_representation -r random_seeds -s training_set_size
+   
+It should be noted that `-t text_representation` indicates the encoding method you choose, the valid options are `fasttext` and `roberta-base`. The evaluation results are stored in directory "outputs/".
