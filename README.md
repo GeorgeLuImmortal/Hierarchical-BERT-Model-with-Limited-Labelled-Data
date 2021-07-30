@@ -68,4 +68,4 @@ When we run the script in __Step 2__, besides the AUC scores on testing set, we 
 
 ## Toy Experiments
 
-We play with the code using the [MovieReview Sentiment dataset] (https://www.cs.cornell.edu/people/pabo/movie-review-data/) consisting of 1000 negative movie reviews and 1000 positive movie reviews.
+We play with the code using the [MovieReview Sentiment dataset](https://www.cs.cornell.edu/people/pabo/movie-review-data/) consisting of 1000 negative movie reviews and 1000 positive movie reviews.
