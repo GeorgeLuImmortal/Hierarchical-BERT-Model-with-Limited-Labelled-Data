@@ -81,7 +81,7 @@ You can also play with the notebook to check the informative sentences suggested
 ![image](https://user-images.githubusercontent.com/16153974/127652134-0b5a72ea-72df-4c8c-8a3d-af5de2487e21.png)
 
 
-### Setup of experiments in the paper
+## Setup of experiments in the paper
 
 __FastText + SVM__: We use 300-dimensional word vectors constructed by a FastText language model pre-trained with the Wikipedia corpus \cite{joulin2016fasttext}. Averaged word embeddings are used as the representation of the document. For preprocessing, all text is converted to lowercase and we remove all punctuation and stop words. SVM is used as the classifier. We tune the hyper-parameters of the SVM classifier using a grid-search based on 5-fold cross-validation performed on the training set, after that, we re-train the classifier with optimised hyper-parameters. This hyper-parameter tuning method is applied in RoBERTa + SVM as well.
 
