@@ -356,7 +356,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage='usage: -t encoding_methods (hbm, roberta, fasttext) -d dataset_name')
 
     
-    parser.add_option("-d","--dataset_name", action="store", type="string", dest="dataset_name", help="directory of raw text data", default = 'animal_by_product')
+    parser.add_option("-d","--dataset_name", action="store", type="string", dest="dataset_name", help="directory of raw text data", default = 'longer_moviereview')
 
     parser.add_option('-t', '--encoding_method', type='string', action='callback',dest='encoding_method',callback=list_callback, default=['roberta'])
 
