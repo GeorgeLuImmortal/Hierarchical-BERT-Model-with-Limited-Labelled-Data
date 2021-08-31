@@ -32,7 +32,7 @@ args = {
         'cuda_num': 1,
 
         ## directory for original text data
-        'text_data_dir': 'raw_corpora/',
+        'text_data_dir': 'corpus_data/',
 
         ## directory for encoded embeddings
         'data_dir': 'datasets/',
@@ -88,9 +88,8 @@ def read_data(path):
 ## split a document into sentences
 def sentences_segmentation(corpora,tokenizer,min_token=0):
     segmented_documents = []
-    iterator = tqdm(corpora, desc="Iteration")
-    for idx,document in enumerate(iterator):
-    # for i in tqdm(range(len(corpora))):
+    
+    for document in tqdm(corpora):
 
         segmented_document = []
         seg_document = sent_tokenize(document)
@@ -172,9 +171,9 @@ def encode_roberta(dataset_name):
     representations_cls = []
 
     with torch.no_grad():
-        iterator = tqdm(all_corpus, desc="Iteration")
-        for idx,article in enumerate(iterator):
-        # for doc_idx in tqdm(range(len(all_corpus))):
+    
+        for article in tqdm(all_corpus):
+    
             
 
             tokenized_text = tokenizer.tokenize(article)
@@ -287,58 +286,30 @@ def encode_roberta_hbm(dataset_name):
     ## doc_sen_embeddings: sentence repsentations of all documents shape [num of docs, [num of sentences in a docs, [num of tokens in a sent, 768]]]
     doc_sen_embeddings = []
 
-    iterator = tqdm(segmented_documents, desc="Iteration")
-    for idx,doc in enumerate(iterator):
+  
+    for doc in tqdm(segmented_documents):
 
-    # for doc_idx in tqdm(range(len(segmented_documents))):
 
-        # doc = segmented_documents[doc_idx]
 
         ## doc_sen_embedding: sentence represetations of a document shape [num of sentences in a doc, 768]
         doc_sen_embedding = []
-        for sen in doc:
-            tokenized_text = tokenizer.tokenize(sen)
-
-            # embeddings_array: token representations of a sentence shape [num of tokens in a sentence, 768]
-            embeddings_array = np.zeros((len(tokenized_text),768))
+        for sen in tqdm(doc):
+            input_ids = tokenizer(sen)['input_ids']
 
             # if number of tokens in a sentence is large than 510
-            if len(tokenized_text) > 510:
-                split_index = len(tokenized_text)//510
+            if len(input_ids)>512:
+                input_ids = input_ids[:512]
 
-    #             print(split_index)
-                for i in range(split_index+1):
+            tokens_tensor = torch.tensor([input_ids]).cuda(args['cuda_num'])
+            encoded_layers = model(tokens_tensor)
 
-                    temp_tokenized_text = ["<s>"]+tokenized_text[i*510:(i+1)*510]+["</s>"]
+            embeddings_array = encoded_layers[0][0].cpu().detach().numpy()
 
-                    indexed_tokens = tokenizer.convert_tokens_to_ids(temp_tokenized_text)
-                    tokens_tensor = torch.tensor([indexed_tokens])
-                    tokens_tensor = tokens_tensor.cuda(args['cuda_num'])
-                    encoded_layers = model(tokens_tensor)
+            del encoded_layers
+            del tokens_tensor
 
-                    if i != split_index:
-                        # embeddings_array[i*510:(i+1)*510] = torch.mean(encoded_layers[0][0],axis=0).cpu().detach().numpy()
-                        embeddings_array[i*510:(i+1)*510] = encoded_layers[0][0].cpu().detach().numpy()
-                    else:
-                        # embeddings_array[i*510:] = torch.mean(encoded_layers[0][0],axis=0).cpu().detach().numpy()
-                        embeddings_array[i*510:] = encoded_layers[0][0].cpu().detach().numpy()
-                    del encoded_layers
-                    del tokens_tensor
-                    
-            else:
-                tokenized_text = ["<s>"]+tokenized_text+["</s>"]
-                indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
-                tokens_tensor = torch.tensor([indexed_tokens])
-                tokens_tensor = tokens_tensor.cuda(args['cuda_num'])
-                encoded_layers = model(tokens_tensor)
-
-                # embeddings_array = torch.mean(encoded_layers[0][0],axis=0).cpu().detach().numpy()
-                embeddings_array = encoded_layers[0][0].cpu().detach().numpy()
-
-                del encoded_layers
-                del tokens_tensor
-                
             doc_sen_embedding.append(embeddings_array)
+                
             
         doc_sen_embeddings.append(doc_sen_embedding)
 
@@ -385,7 +356,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage='usage: -t encoding_methods (hbm, roberta, fasttext) -d dataset_name')
 
     
-    parser.add_option("-d","--dataset_name", action="store", type="string", dest="dataset_name", help="directory of raw text data", default = 'longer_moviereview')
+    parser.add_option("-d","--dataset_name", action="store", type="string", dest="dataset_name", help="directory of raw text data", default = 'animal_by_product')
 
     parser.add_option('-t', '--encoding_method', type='string', action='callback',dest='encoding_method',callback=list_callback, default=['roberta'])
 
@@ -401,6 +372,7 @@ if __name__ == "__main__":
 
 
     for value in encoding_methods:
+        print(value)
         if value not in ['roberta','hbm','fasttext']:
             parser.error( "Encoding method choice are hbm, fasttext or roberta." )
 
@@ -408,6 +380,7 @@ if __name__ == "__main__":
     for value in encoding_methods:
 
         if value == 'hbm':
+            print('starting coding hbm')
             hbm_roberta_neg, hbm_roberta_pos = encode_roberta_hbm(dataset_name)
 
             with open(os.path.join(args['data_dir'],'roberta-base_data/%s_neg.p'%(dataset_name)), 'wb') as fp:
